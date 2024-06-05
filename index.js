@@ -35,6 +35,9 @@ $(document).ready(function() {
 
 // Function to roll dice and determine winner
 function nextSequence() {
+  // Reset opacity of all dice to 100%
+  $(".dice img").css("opacity", "1");
+
   var rolls = [];
   var randomNameIndex = Math.floor(Math.random() * playerCount);
   var randomName = playerNames[randomNameIndex];
@@ -54,10 +57,10 @@ function nextSequence() {
     // Sort rolls in descending order
     rolls.sort((a, b) => b.roll - a.roll);
 
-    // Enlarge the dice images based on roll results
+    // Enlarge the dice images based on roll results with slower transition
     for (var i = 0; i < rolls.length; i++) {
       var size = (100 - (i * 20)) + "%";
-      $(".img" + (rolls[i].index + 1)).css("width", size);
+      $(".img" + (rolls[i].index + 1)).css({"width": size, "transition": "width 1.5s"});
     }
 
     // Check for ties and handle sudden death
@@ -65,10 +68,10 @@ function nextSequence() {
     var winners = rolls.filter(player => player.roll === highestRoll);
 
     if (winners.length > 1) {
-      $("#start").text("Sudden Death! Rolling again for " + winners.map(player => playerNames[player.index]).join(", ") + "...");
+      $("#start").text("Entering Sudden Death! Rolling again for " + winners.map(player => playerNames[player.index]).join(", ") + "...");
       setTimeout(suddenDeath, 3000, winners.map(player => player.index));
     } else {
-      $("#start").text("Good Luck " + randomName + "! The winner is " + playerNames[winners[0].index] + " with a roll of " + highestRoll + "!");
+      $("#start").text("The winner is " + playerNames[winners[0].index] + " with a roll of " + highestRoll + "!");
     }
   }, 1000); // 1-second delay
 }
@@ -89,26 +92,33 @@ function suddenDeath(tiedPlayers) {
   // Sort rolls in descending order
   rolls.sort((a, b) => b.roll - a.roll);
 
-  // Enlarge the dice images based on roll results
+  // Enlarge the dice images based on roll results with slower transition
   for (var i = 0; i < rolls.length; i++) {
     var size = (100 - (i * 20)) + "%";
-    $(".img" + (rolls[i].index + 1)).css("width", size);
+    $(".img" + (rolls[i].index + 1)).css({"width": size, "transition": "width 1.5s"});
+  }
+
+  // Set smaller size and opacity for non-involved players
+  for (var i = 0; i < playerCount; i++) {
+    if (!tiedPlayers.includes(i)) {
+      $(".img" + (i + 1)).css({ "width": "50%", "opacity": "0.5" });
+    }
   }
 
   // Check for further ties and handle sudden death recursively if needed
   var highestRoll = rolls[0].roll;
   var winners = rolls.filter(player => player.roll === highestRoll);
 
-  if (winners.length > 1) {
-    $("#start").text("Another tie! Rolling again for " + winners.map(player => playerNames[player.index]).join(", ") + "...");
+ if (winners.length > 1) {
+    $("#start").text("Another tie! Entering Sudden Death... Rolling again for " + winners.map(player => playerNames[player.index]).join(", ") + "...");
     setTimeout(suddenDeath, 3000, winners.map(player => player.index));
   } else {
     $("#start").text("The winner is " + playerNames[winners[0].index] + " with a roll of " + highestRoll + "!");
   }
 }
 
-// Event listener to start the game on any key press
-$(document).keypress(function() {
+// Event listener to start the game on any key press or click of the Roll The Dice button
+$(document).on("keypress click", function() {
   if (!started) {
     $(".dice").fadeIn();
     $("#start").text("Good Luck!");
@@ -119,5 +129,7 @@ $(document).keypress(function() {
 
 // Event listener for the Roll The Dice button
 $(".refresh").click(function() {
+  started = false; // Reset started variable
   nextSequence();
 });
+
