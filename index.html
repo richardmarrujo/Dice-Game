@@ -1,52 +1,123 @@
-<!DOCTYPE html>
-<html lang="en" dir="ltr">
-  <head>
-    <meta charset="utf-8">
-    <title>Dicee</title>
-    <link rel="stylesheet" href="styles.css">
-    <link href="https://fonts.googleapis.com/css?family=Indie+Flower|Lobster" rel="stylesheet">
+var playerCount = 0;
+var playerNames = [];
+var started = false;
 
-  </head>
-  <body>
+// Prompt for number of players
+playerCount = parseInt(prompt("How many players? (Up to 4 players)"));
 
-    <div class="container">
-      <h1 id="start"> Press Any Key to Start</h1>
+if (playerCount > 4) {
+  alert("The game can only accommodate up to 4 players.");
+  playerCount = 4;
+}
 
-      <div class="dice">
-        <p id=player1>Player 1</p>
-        <img class="img1" src="images/dice6.png">
+// Prompt for player names
+for (var i = 0; i < playerCount; i++) {
+  playerNames.push(prompt("Enter name for Player " + (i + 1) + ":"));
+}
+
+// Function to create player dice elements
+function createPlayerDice() {
+  for (var i = 0; i < playerCount; i++) {
+    var newDice = `
+      <div class='dice'>
+        <p class='player${i + 1}'>${playerNames[i].toUpperCase()}</p>
+        <img class='img${i + 1}' src='images/dice6.png' alt='Dice image for Player ${i + 1}'>
       </div>
+    `;
+    $("br").before(newDice);
+  }
+}
 
-      <div class="dice">
-        <p id=player2>Player 2</p>
-        <img class="img2" src="images/dice6.png">
-      </div>
+// Call the function to create player dice elements
+$(document).ready(function() {
+  createPlayerDice();
+});
 
-      <div class="dice">
-        <p id=player3>Player 3</p>
-        <img class="img3" src="images/dice6.png">
-      </div>
+// Function to roll dice and determine winner
+function nextSequence() {
+  var rolls = [];
+  var randomNameIndex = Math.floor(Math.random() * playerCount);
+  var randomName = playerNames[randomNameIndex];
 
-      <div class="dice">
-        <p id=player4>Player 4</p>
-        <img class="img4" src="images/dice6.png">
-      </div>
+  $("#start").text("Good Luck " + randomName + "!");
 
-      <br>
+  setTimeout(function() {
+    // Roll dice for each player
+    for (var i = 0; i < playerCount; i++) {
+      var randomNumber = Math.floor(Math.random() * 6) + 1;
+      var diceImage = "images/dice" + randomNumber + ".png";
+      $(".img" + (i + 1)).attr("src", diceImage);
 
-      <button class="refresh" onClick = "nextSequence()" > Roll The Dice </button>
-    </div>
+      rolls.push({ index: i, roll: randomNumber });
+    }
 
-<!-- JQuery Script-->
-<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
+    // Sort rolls in descending order
+    rolls.sort((a, b) => b.roll - a.roll);
 
-<script src="index.js" charset="utf-8"></script>
+    // Enlarge the dice images based on roll results
+    for (var i = 0; i < rolls.length; i++) {
+      var size = (100 - (i * 20)) + "%";
+      $(".img" + (rolls[i].index + 1)).css("width", size);
+    }
 
-</body>
+    // Check for ties and handle sudden death
+    var highestRoll = rolls[0].roll;
+    var winners = rolls.filter(player => player.roll === highestRoll);
 
-  <footer>
-    <a href="https://www.github.com/richardmarrujo">Click here for more from Richard Marrujo</a>
-  </footer>
+    if (winners.length > 1) {
+      $("#start").text("Sudden Death! Rolling again for " + winners.map(player => playerNames[player.index]).join(", ") + "...");
+      setTimeout(suddenDeath, 3000, winners.map(player => player.index));
+    } else {
+      $("#start").text("Good Luck " + randomName + "! The winner is " + playerNames[winners[0].index] + " with a roll of " + highestRoll + "!");
+    }
+  }, 1000); // 1-second delay
+}
 
+// Function to handle sudden death rounds
+function suddenDeath(tiedPlayers) {
+  var rolls = [];
 
-</html>
+  for (var i = 0; i < tiedPlayers.length; i++) {
+    var playerIndex = tiedPlayers[i];
+    var randomNumber = Math.floor(Math.random() * 6) + 1;
+    var diceImage = "images/dice" + randomNumber + ".png";
+    $(".img" + (playerIndex + 1)).attr("src", diceImage);
+
+    rolls.push({ index: playerIndex, roll: randomNumber });
+  }
+
+  // Sort rolls in descending order
+  rolls.sort((a, b) => b.roll - a.roll);
+
+  // Enlarge the dice images based on roll results
+  for (var i = 0; i < rolls.length; i++) {
+    var size = (100 - (i * 20)) + "%";
+    $(".img" + (rolls[i].index + 1)).css("width", size);
+  }
+
+  // Check for further ties and handle sudden death recursively if needed
+  var highestRoll = rolls[0].roll;
+  var winners = rolls.filter(player => player.roll === highestRoll);
+
+  if (winners.length > 1) {
+    $("#start").text("Another tie! Rolling again for " + winners.map(player => playerNames[player.index]).join(", ") + "...");
+    setTimeout(suddenDeath, 3000, winners.map(player => player.index));
+  } else {
+    $("#start").text("The winner is " + playerNames[winners[0].index] + " with a roll of " + highestRoll + "!");
+  }
+}
+
+// Event listener to start the game on any key press
+$(document).keypress(function() {
+  if (!started) {
+    $(".dice").fadeIn();
+    $("#start").text("Good Luck!");
+    nextSequence();
+    started = true;
+  }
+});
+
+// Event listener for the Roll The Dice button
+$(".refresh").click(function() {
+  nextSequence();
+});
