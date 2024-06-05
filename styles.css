@@ -1,17 +1,21 @@
+body {
+  background-color: #393E46;
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
 .container {
   width: 100%;
   margin: auto;
   text-align: center;
+  padding: 20px;
 }
 
 .dice {
   text-align: center;
   display: inline-block;
-
-}
-
-body {
-  background-color: #393E46;
+  margin: 10px;
 }
 
 h1 {
@@ -40,9 +44,10 @@ footer {
   font-family: 'Indie Flower', cursive;
   font-size: 2rem;
   width: 100%;
+  padding: 10px 0;
 }
 
-.refresh{
+.refresh {
   background-color: #fff;
   width: 200px;
   margin-top: 30px;
@@ -50,6 +55,13 @@ footer {
   font-family: 'Lobster', cursive;
   font-size: 2rem;
   color: #4ECCA3;
+  border: none;
+  padding: 10px;
+  cursor: pointer;
+  transition: background-color 0.3s, color 0.3s;
 }
 
+.refresh:hover {
+  background-color: #4ECCA3;
+  color: #fff;
 }
